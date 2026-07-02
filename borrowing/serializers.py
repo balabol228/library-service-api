@@ -18,10 +18,8 @@ class BorrowingSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "borrow_date", "actual_return_date", "user")
 
     def validate(self, attrs):
-        # Отримуємо поточного юзера з контексту запиту
         user = self.context["request"].user
-        
-        # Перевіряємо, чи є у цього юзера будь-які неоплачені сесії (PENDING)
+
         has_pending_payments = Payment.objects.filter(
             borrowing__user=user,
             status=Payment.StatusChoices.PENDING

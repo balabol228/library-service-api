@@ -4,7 +4,6 @@ from django.conf import settings
 
 
 def send_telegram_message(message: str) -> None:
-    """Надсилає повідомлення у Telegram чат розробника/адміна"""
     token = settings.TELEGRAM_BOT_TOKEN
     chat_id = settings.TELEGRAM_CHAT_ID
 

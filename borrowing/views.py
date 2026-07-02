@@ -23,13 +23,11 @@ class BorrowingViewSet(
 
     def get_queryset(self):
         queryset = self.queryset
-        # Адміни бачать все, звичайні юзери — тільки свої замовлення
         if not self.request.user.is_staff:
             return queryset.filter(user=self.request.user)
         return queryset
 
     def perform_create(self, serializer):
-        # Цей метод ми оновили на попередньому кроці для звичайної оплати
         from payment.stripe_session import create_stripe_session
         
         with transaction.atomic():
@@ -48,19 +46,16 @@ class BorrowingViewSet(
         )
         send_telegram_message(message)
 
-    # НОВИЙ ЕНДПОЇНТ ДЛЯ ПОВЕРНЕННЯ ТА ШТРАФІВ
     @action(detail=True, methods=["POST"], url_path="return")
     def return_book(self, request, pk=None):
         borrowing = self.get_object()
 
-        # 1. Перевіряємо, чи книгу вже не повернули раніше
         if borrowing.actual_return_date is not None:
             return Response(
                 {"error": "This borrowing has already been returned."},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Безпечно оновлюємо базу даних через транзакцію
         with transaction.atomic():
             today = date.today()
             borrowing.actual_return_date = today
@@ -70,14 +65,11 @@ class BorrowingViewSet(
             book.inventory += 1
             book.save()
 
-        # 2. ПЕРЕВІРКА НА ПРОТЕРМІНУВАННЯ
         if today > borrowing.expected_return_date:
             overdue_days = (today - borrowing.expected_return_date).days
-            
-            # Генеруємо штрафну сесію в Stripe
+
             fine_payment = create_stripe_fine_session(borrowing, overdue_days, request)
 
-            # Надсилаємо сповіщення адміну/користувачу про штраф
             message = (
                 f"⚠️ <b>Book Returned LATE! Fine Issued.</b>\n\n"
                 f"👤 <b>User:</b> {borrowing.user.email}\n"
@@ -97,7 +89,6 @@ class BorrowingViewSet(
                 status=status.HTTP_200_OK
             )
 
-        # 3. Якщо повернув вчасно
         message = (
             f"🟢 <b>Book Returned on Time!</b>\n\n"
             f"👤 <b>User:</b> {borrowing.user.email}\n"

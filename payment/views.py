@@ -27,7 +27,6 @@ class PaymentViewSet(
             return queryset.filter(borrowing__user=self.request.user)
         return queryset
 
-    # Ендпоінт успішної оплати: /api/payments/success/
     @action(detail=False, methods=["GET"], url_path="success")
     def success(self, request):
         session_id = request.query_params.get("session_id")
@@ -37,7 +36,6 @@ class PaymentViewSet(
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Знаходимо платіж у нашій базі за ID сесії
         try:
             payment = Payment.objects.get(session_id=session_id)
         except Payment.DoesNotExist:
@@ -46,15 +44,12 @@ class PaymentViewSet(
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        # Стукаємо в Stripe, щоб перевірити реальний статус сесії
         session = stripe.checkout.Session.retrieve(session_id)
 
         if session.payment_status == "paid":
-            # Якщо Stripe підтверджує оплату — оновлюємо статус у себе
             payment.status = Payment.StatusChoices.PAID
             payment.save()
 
-            # Надсилаємо сповіщення в Telegram адміну
             message = (
                 f"✅ <b>Payment Confirmed!</b>\n\n"
                 f"👤 <b>User:</b> {payment.borrowing.user.email}\n"
@@ -74,7 +69,6 @@ class PaymentViewSet(
             status=status.HTTP_400_BAD_REQUEST
         )
 
-    # Ендпоінт скасування оплати: /api/payments/cancel/
     @action(detail=False, methods=["GET"], url_path="cancel")
     def cancel(self, request):
         return Response(
