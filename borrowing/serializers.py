@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from book.models import Book
-from .models import Borrowing
+from borrowing.models import Borrowing
 from payment.models import Payment
 from rest_framework import serializers
 

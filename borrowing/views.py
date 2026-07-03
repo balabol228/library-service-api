@@ -5,8 +5,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import Borrowing
-from .serializers import BorrowingSerializer
+from borrowing.models import Borrowing
+from borrowing.serializers import BorrowingSerializer, BorrowingListSerializer
 from .notifications import send_telegram_message
 from payment.stripe_session import create_stripe_fine_session
 

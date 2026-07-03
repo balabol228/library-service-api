@@ -6,8 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from borrowing.notifications import send_telegram_message
-from .models import Payment
-from .serializers import PaymentSerializer
+from payment.models import Payment
+from payment.serializers import PaymentSerializer
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
